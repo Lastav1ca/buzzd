@@ -6,3 +6,4 @@
 	*.log
 	coverage/
 	.DS_Store
+	docs/
