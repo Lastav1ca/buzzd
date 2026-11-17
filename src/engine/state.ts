@@ -21,7 +21,7 @@ function createHand(color : Color) : Piece[]{
   const hand : Piece[] = []
   for (const type of Object.keys(PIECE_COUNTS) as PieceType[]){
     for (let i = 0; i < PIECE_COUNTS[type]; i++){
-      hand.push({ type, color })
+      hand.push({ type, color, id: i + 1 })
     }
   }
   return hand

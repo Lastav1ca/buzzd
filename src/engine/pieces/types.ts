@@ -4,7 +4,8 @@ export type Color = "white" | "black"
 
 export type Piece = {
     type: PieceType,
-    color: Color
+    color: Color,
+    id: number   // redni broj figure tog tipa (wA1, wA2...), za notaciju
 };
 
 // osnovni set: 11 figura po igracu
