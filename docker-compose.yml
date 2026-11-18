@@ -6,9 +6,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-buzzd}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-buzzd}
       POSTGRES_DB: ${POSTGRES_DB:-buzzd}
-    # 5432 na hostu vec zauzima lokalni Postgres
+    # 5432 zauzima lokalni Postgres, 5433 baza iz drugog projekta
     ports:
-      - "${POSTGRES_PORT:-5433}:5432"
+      - "${POSTGRES_PORT:-5434}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
