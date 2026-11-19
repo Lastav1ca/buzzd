@@ -2,9 +2,11 @@
   "name": "hive",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx watch --env-file=.env src/server/index.ts",
+    "start": "tsx --env-file=.env src/server/index.ts",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -19,8 +21,18 @@
   },
   "homepage": "https://github.com/Lastav1ca/buzzd#readme",
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "@types/ws": "^8.18.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1",
+    "ws": "^8.23.0"
   }
 }

@@ -7,11 +7,11 @@ import { getStatus as getGameStatus } from "../engine/status.js"
 export type MatchStatus = 'waiting' | 'ongoing' | 'finished'
 
 export type MatchResult =
-    | { kind : 'win', winner : Color, reason : 'queen' | 'resign' }
+    | { kind : 'win', winner : Color, reason : 'queen' | 'resign' | 'disconnect' }
     | { kind : 'draw' }
     | { kind : 'aborted' }
 
-// poziva se kad se mec zavrsi (ovde ce se kasnije upisivati u bazu)
+// poziva se kad se mec zavrsi (server tu upisuje mec u bazu)
 export type MatchEndHandler = (match : Match) => void
 
 // jedna sesija igre izmedju dva igraca
@@ -23,6 +23,7 @@ export class Match {
     private history : string[] = []             // potezi u notaciji
     private status : MatchStatus = 'waiting'
     private result : MatchResult | undefined
+    private startedAt : Date | undefined
     private onEnd : MatchEndHandler
 
     constructor(id : string, whiteId : string, blackId : string, onEnd : MatchEndHandler){
@@ -38,6 +39,7 @@ export class Match {
         this.state = createInitialState()
         this.history = []
         this.result = undefined
+        this.startedAt = new Date()
         this.status = 'ongoing'
     }
 
@@ -51,6 +53,13 @@ export class Match {
         this.ensureOngoing()
         const color = this.getPlayerColor(playerId)
         this.finish({ kind : 'win', winner : getOpponent(color), reason : 'resign' })
+    }
+
+    // poraz jer se igrac nije vratio posle diskonekcije
+    forfeit(playerId : string){
+        this.ensureOngoing()
+        const color = this.getPlayerColor(playerId)
+        this.finish({ kind : 'win', winner : getOpponent(color), reason : 'disconnect' })
     }
 
     playMove(playerId : string, move : Move){
@@ -84,6 +93,14 @@ export class Match {
 
     getResult() : MatchResult | undefined{
         return this.result
+    }
+
+    getStartedAt() : Date | undefined{
+        return this.startedAt
+    }
+
+    hasPlayer(playerId : string) : boolean{
+        return this.players.white == playerId || this.players.black == playerId
     }
 
     getCurrentPlayer() : string{
