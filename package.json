@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/server/index.ts",
     "start": "tsx --env-file=.env src/server/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:api": "newman run postman/buzzd.postman_collection.json"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,7 @@
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "@types/ws": "^8.18.2",
+    "newman": "^6.2.3",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
