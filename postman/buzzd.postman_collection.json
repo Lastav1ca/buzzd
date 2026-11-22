@@ -1,0 +1,429 @@
+{
+  "info": {
+    "name": "buzzd",
+    "description": "HTTP endpointi buzzd servera i uputstvo za WebSocket.\n\n## WebSocket\n\nPostman ne čuva WebSocket zahteve u JSON fajlu kolekcije, pa se prave ručno (jednom):\n\n1. **New → WebSocket**, URL: `{{wsUrl}}/ws?token={{token1}}` (igrač 1). Sačuvaj ga u ovu kolekciju.\n2. Isto za `{{token2}}` (igrač 2) i `{{token3}}` (posmatrač).\n3. U svakom WebSocket zahtevu, pod **Saved messages**, sačuvaj poruke ispod.\n\nRedosled: pokreni **Create room**, pa **Join** zahteve (oni upisuju tokene u varijable kolekcije), pa se u roku od 30 s poveži preko WebSocket-a.\n\n### Poruke\n\n```json\n{ \"type\": \"choose_color\", \"color\": \"white\" }\n{ \"type\": \"choose_color\", \"color\": \"black\" }\n{ \"type\": \"choose_color\", \"color\": \"random\" }\n{ \"type\": \"ready\" }\n{ \"type\": \"unready\" }\n{ \"type\": \"move\", \"move\": { \"type\": \"place\", \"piece\": \"ant\", \"to\": { \"q\": 0, \"r\": 0 } } }\n{ \"type\": \"move\", \"move\": { \"type\": \"move\", \"from\": { \"q\": 0, \"r\": 0 }, \"to\": { \"q\": 1, \"r\": 0 } } }\n{ \"type\": \"move\", \"move\": { \"type\": \"pass\" } }\n{ \"type\": \"resign\" }\n{ \"type\": \"leave\" }\n```\n\nLegalne poteze za trenutno stanje server šalje u polju `legalMoves` (u `match_started`, `match_state` i `move_played`), pa se jedan od njih može prekopirati u `move` poruku.\n\n### Negativni slučajevi\n\n- token koji ne postoji → konekcija se zatvara kodom `4001`\n- povezivanje posle isteka roka od 30 s → `4003`\n- `move` kad nisi na redu → `{ \"type\": \"error\", \"message\": \"Not your turn\" }`\n- nelegalan potez → `Illegal move`\n- `choose_color` tokom meča → `Match is in progress`\n- bilo koja poruka od posmatrača → `Spectators can only watch`\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "wsUrl",
+      "value": "ws://localhost:3000"
+    },
+    {
+      "key": "roomId",
+      "value": ""
+    },
+    {
+      "key": "token1",
+      "value": ""
+    },
+    {
+      "key": "token2",
+      "value": ""
+    },
+    {
+      "key": "token3",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/healthz",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "healthz"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"status ok\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "Create room (public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms"
+              ]
+            },
+            "description": "Pravi sobu i upisuje njen id u varijablu `roomId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"visibility\": \"public\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"ima roomId\", () => pm.expect(body.roomId).to.be.a(\"string\"));",
+                  "pm.collectionVariables.set(\"roomId\", body.roomId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create room (private)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"visibility\": \"private\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"privatna\", () => pm.expect(pm.response.json().visibility).to.eql(\"private\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List public rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"niz\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join (player 1)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/{{roomId}}/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}",
+                "join"
+              ]
+            },
+            "description": "Upisuje token u `token1`. Poveži se preko WebSocket-a u roku od 30 s."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"uloga player\", () => pm.expect(body.role).to.eql(\"player\"));",
+                  "pm.collectionVariables.set(\"token1\", body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join (player 2)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/{{roomId}}/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}",
+                "join"
+              ]
+            },
+            "description": "Upisuje token u `token2`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"uloga player\", () => pm.expect(body.role).to.eql(\"player\"));",
+                  "pm.collectionVariables.set(\"token2\", body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join (spectator)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/{{roomId}}/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}",
+                "join"
+              ]
+            },
+            "description": "Treći ulazak u punu sobu daje ulogu posmatrača. Upisuje token u `token3`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"uloga spectator\", () => pm.expect(body.role).to.eql(\"spectator\"));",
+                  "pm.collectionVariables.set(\"token3\", body.token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Negative",
+      "item": [
+        {
+          "name": "Create room - invalid visibility",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"visibility\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"ima error\", () => pm.expect(pm.response.json().error).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create room - invalid JSON",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{bad json",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join - room not found",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/nepostoji/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "nepostoji",
+                "join"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"poruka\", () => pm.expect(pm.response.json().error).to.eql(\"Room not found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join - wrong method",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/{{roomId}}/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}",
+                "join"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
