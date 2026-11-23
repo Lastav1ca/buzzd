@@ -4,7 +4,7 @@ import type { GameState } from "../engine/state.js"
 
 export type ColorChoice = Color | 'random'
 
-// poruke koje klijent salje preko WebSocket-a
+// messages the client sends over WebSocket
 export type ClientMessage =
     | { type : 'choose_color', color : ColorChoice }
     | { type : 'ready' }
@@ -15,7 +15,7 @@ export type ClientMessage =
 
 const COLOR_CHOICES : ColorChoice[] = ['white', 'black', 'random']
 
-// proverava samo oblik poruke; da li je potez legalan proverava engine
+// checks only the message shape; the engine checks whether a move is legal
 export function parseClientMessage(raw : string) : ClientMessage{
     let data : any
     try {
@@ -41,7 +41,7 @@ export function parseClientMessage(raw : string) : ClientMessage{
     }
 }
 
-// Map se ne serijalizuje u JSON, pa tabla ide kao niz parova [kljuc, stek]
+// Map doesn't serialize to JSON, so the board is sent as an array of [key, stack] pairs
 export function serializeState(state : GameState){
     return {
         board : Array.from(state.board),

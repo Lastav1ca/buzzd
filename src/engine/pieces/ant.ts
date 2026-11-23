@@ -2,7 +2,7 @@ import { hexToKey, type Hex } from "../grid/hex.js"
 import type { GameState } from "../state.js"
 import { getSlides } from "./movement.js"
 
-// bilo koliko koraka klizanjem oko kosnice (BFS)
+// any number of sliding steps around the hive (BFS)
 export function getAntMoves(state : GameState, from : Hex) : Hex[]{
     const result : Hex[] = []
     const visited = new Set([hexToKey(from)])

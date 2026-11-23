@@ -1,12 +1,12 @@
 import { getNeighbors, hexToKey, keyToHex, type Hex } from "./grid/hex.js";
 import { PIECE_COUNTS, type Color, type Piece, type PieceType } from "./pieces/types.js";
 
-export type Board = Map<string, Piece[]>   // ključ "q,r" → stek figura (zbog bube)
+export type Board = Map<string, Piece[]>   // key "q,r" → stack of pieces (because of the beetle)
 
 export type GameState = {
   board: Board;
-  hands: Record<Color, Piece[]>;     // figure koje još nisu postavljene
-  turn: number;                      // 0, 1, 2... beli igra na parnim
+  hands: Record<Color, Piece[]>;     // pieces not yet placed
+  turn: number;                      // 0, 1, 2... white plays on even turns
 };
 
 export function createInitialState() : GameState{
@@ -39,7 +39,7 @@ export function getCurrentColor(state : GameState) : Color{
   return state.turn % 2 == 0 ? 'white' : 'black'
 }
 
-// koji je ovo po redu potez igraca koji je na potezu (1, 2, 3...)
+// which turn this is for the player to move (1, 2, 3...)
 export function getPlayerTurn(state : GameState) : number{
   return Math.floor(state.turn / 2) + 1
 }
@@ -71,7 +71,7 @@ export function isQueenPlaced(state : GameState, color : Color) : boolean{
   return !state.hands[color].some(p => p.type == 'queen')
 }
 
-// kraljica moze biti i ispod bube, pa se gleda ceo stek
+// the queen can be under a beetle, so the whole stack is checked
 export function findQueen(state : GameState, color : Color) : Hex | undefined{
   for (const [key, stack] of state.board){
     if (stack.some(p => p.type == 'queen' && p.color == color)){
@@ -81,7 +81,7 @@ export function findQueen(state : GameState, color : Color) : Hex | undefined{
   return undefined
 }
 
-// vraca novo stanje bez gornje figure sa polja; prazan stek se brise iz mape
+// returns a new state without the top piece at the hex; an empty stack is removed from the map
 export function removeTopPiece(state : GameState, hex : Hex) : GameState{
   const next = cloneState(state)
   const key = hexToKey(hex)
@@ -95,7 +95,7 @@ export function removeTopPiece(state : GameState, hex : Hex) : GameState{
   return next
 }
 
-// One Hive: sve figure moraju biti povezane
+// One Hive: all pieces must be connected
 export function isHiveConnected(state : GameState) : boolean{
   const first = state.board.keys().next().value
   if (first == undefined) return true

@@ -3,10 +3,10 @@ import { config } from "./config.js"
 
 export type Role = 'player' | 'spectator'
 
-// token za jednu sobu, nezavisan od login tokena
+// token for a single room, independent of the login token
 export type RoomToken = {
     playerId : string,
-    userId : string | null,   // null = gost
+    userId : string | null,   // null = guest
     roomId : string,
     role : Role
 }

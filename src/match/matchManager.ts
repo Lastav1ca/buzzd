@@ -1,6 +1,6 @@
 import { Match, type MatchEndHandler } from "./match.js"
 
-// drzi sve aktivne meceve; ne zna za bazu, samo prosledjuje onMatchEnd
+// holds all active matches; doesn't know about the database, only forwards onMatchEnd
 export class MatchManager {
     private matches : Map<string, Match> = new Map()
     private onMatchEnd : MatchEndHandler
@@ -19,7 +19,7 @@ export class MatchManager {
         return this.matches.get(id)
     }
 
-    // zavrseni mecevi ostaju dok se ne obrisu ovde
+    // finished matches stay until they are removed here
     remove(id : string) : boolean{
         return this.matches.delete(id)
     }

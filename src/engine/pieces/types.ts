@@ -5,10 +5,10 @@ export type Color = "white" | "black"
 export type Piece = {
     type: PieceType,
     color: Color,
-    id: number   // redni broj figure tog tipa (wA1, wA2...), za notaciju
+    id: number   // ordinal of the piece within its type (wA1, wA2...), for notation
 };
 
-// osnovni set: 11 figura po igracu
+// base set: 11 pieces per player
 export const PIECE_COUNTS : Record<PieceType, number> = {
     queen : 1,
     spider : 2,

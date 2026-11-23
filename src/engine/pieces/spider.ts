@@ -4,7 +4,7 @@ import { getSlides } from "./movement.js"
 
 const SPIDER_STEPS = 3
 
-// tacno 3 koraka klizanjem, bez vracanja na polje kojim je vec prosao
+// exactly 3 sliding steps, without revisiting a hex it already passed
 export function getSpiderMoves(state : GameState, from : Hex) : Hex[]{
     const result : Set<string> = new Set()
 

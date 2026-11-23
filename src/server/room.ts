@@ -15,12 +15,12 @@ type PlayerSlot = {
     colorChoice : ColorChoice,
     ready : boolean,
     socket : WebSocket | undefined,
-    timer : NodeJS.Timeout | undefined   // rok da se poveze / vrati
+    timer : NodeJS.Timeout | undefined   // deadline to connect / come back
 }
 
 const MAX_PLAYERS = 2
 
-// soba sa 2 mesta za igrace i posmatracima; u njoj se igra vise meceva zaredom
+// room with 2 player seats and spectators; multiple matches are played in it in a row
 export class Room {
     readonly id : string
     readonly visibility : Visibility
@@ -39,7 +39,7 @@ export class Room {
         this.matches = matches
         this.onClose = onClose
 
-        // soba u koju niko ne udje se brise
+        // a room nobody joins gets deleted
         this.emptyTimer = setTimeout(() => {
             if (this.players.length == 0) this.close()
         }, config.reconnectTimeoutMs)
@@ -70,7 +70,7 @@ export class Room {
         }
     }
 
-    // HTTP join rezervise mesto; ako se igrac ne poveze preko WebSocket-a na vreme, mesto se oslobadja
+    // HTTP join reserves a seat; if the player doesn't connect over WebSocket in time, the seat is freed
     addPlayer(playerId : string, userId : string | null){
         if (this.hasPlayer(playerId)) return
         if (!this.hasFreeSeat()) {throw new Error('Room is full')}
@@ -92,7 +92,7 @@ export class Room {
         const slot = this.getSlot(token.playerId)
         if (!slot) {throw new Error('Seat expired, join the room again')}
 
-        // isti igrac iz drugog taba: stara konekcija se zatvara
+        // same player from another tab: the old connection is closed
         const previous = slot.socket
         slot.socket = socket
         previous?.close(4000, 'Connected from another place')
@@ -113,11 +113,11 @@ export class Room {
         }
 
         const slot = this.getSlot(token.playerId)
-        if (!slot || slot.socket !== socket) return   // vec zamenjena konekcija
+        if (!slot || slot.socket !== socket) return   // connection already replaced
 
         slot.socket = undefined
         const inMatch = this.isMatchOngoing() && this.match?.hasPlayer(slot.playerId)
-        // diskonekcija pre prvog poteza samo prekida mec
+        // a disconnect before the first move only aborts the match
         const noMovesYet = this.match?.getHistory().length == 0
 
         if (inMatch){
@@ -195,7 +195,7 @@ export class Room {
         this.broadcastRoomState()
     }
 
-    // posle poteza ili predaje: ako je mec gotov, javi svima
+    // after a move or resign: if the match is over, notify everyone
     private afterMatchAction(){
         const match = this.match
         if (!match || match.getStatus() != 'finished') return
@@ -204,7 +204,7 @@ export class Room {
         this.broadcastRoomState()
     }
 
-    // leave = predaja, istekao rok za povratak = poraz zbog diskonekcije; pre prvog poteza mec se samo prekida
+    // leave = resign, reconnect deadline expired = loss by disconnect; before the first move the match is just aborted
     private removePlayer(slot : PlayerSlot, reason : 'resign' | 'disconnect', noMovesYet : boolean){
         clearTimeout(slot.timer)
 
@@ -221,7 +221,7 @@ export class Room {
             return
         }
 
-        // preostali igrac ceka novog protivnika
+        // the remaining player waits for a new opponent
         for (const player of this.players) player.ready = false
         this.broadcastRoomState()
     }
@@ -270,7 +270,7 @@ export class Room {
         }
     }
 
-    // pri (ponovnom) povezivanju klijent dobija stanje sobe i meca koji je u toku
+    // on (re)connect the client gets the state of the room and the ongoing match
     private sendInitialState(socket : WebSocket){
         send(socket, this.getRoomState())
         if (this.match && this.isMatchOngoing()){
