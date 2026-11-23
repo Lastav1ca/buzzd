@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import beeUrl from "../resources/bee.png"
+import beeUrl from "../resources/pieces/bee.png"
+import { PieceIconDefs } from "./components/PieceHex.js"
 import { Lobby } from "./components/Lobby.js"
 import { RoomView } from "./components/RoomView.js"
 import { parseRoute } from "./router.js"
@@ -15,6 +16,7 @@ export function App(){
 
     return (
         <div className="app">
+            <PieceIconDefs />
             <header className="app-header">
                 <a href="#/" className="logo">
                     <span className="logo-icon" style={{ maskImage : `url(${beeUrl})`, WebkitMaskImage : `url(${beeUrl})` }} aria-hidden="true" />
