@@ -4,7 +4,7 @@ import { parseClientMessage } from "./protocol.js"
 import type { RoomManager } from "./roomManager.js"
 import { verifyRoomToken } from "./tokens.js"
 
-// kodovi za zatvaranje konekcije (4000-4999 su slobodni za aplikaciju)
+// connection close codes (4000-4999 are free for application use)
 const CLOSE_INVALID_TOKEN = 4001
 const CLOSE_NOT_ALLOWED = 4003
 const CLOSE_ROOM_NOT_FOUND = 4004
@@ -13,7 +13,7 @@ export function attachWebSocket(server : Server, rooms : RoomManager){
     const wss = new WebSocketServer({ server, path : '/ws' })
 
     wss.on('connection', (socket, req) => {
-        // browser ne moze da posalje zaglavlja, pa token stize u URL-u
+        // browsers can't send headers, so the token comes in the URL
         const url = new URL(req.url ?? '', 'http://localhost')
         const token = verifyRoomToken(url.searchParams.get('token') ?? '')
         if (!token){

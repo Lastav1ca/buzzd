@@ -9,6 +9,6 @@ export const config = {
     databaseUrl : required('DATABASE_URL'),
     jwtSecret : required('JWT_SECRET'),
     roomTokenTtlSeconds : 12 * 60 * 60,
-    // koliko igrac ima da se poveze posle join-a, odnosno da se vrati posle diskonekcije
+    // how long a player has to connect after join, or to come back after a disconnect
     reconnectTimeoutMs : Number(process.env.RECONNECT_TIMEOUT_MS ?? 30_000)
 }

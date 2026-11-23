@@ -11,16 +11,16 @@ export type MatchResult =
     | { kind : 'draw' }
     | { kind : 'aborted' }
 
-// poziva se kad se mec zavrsi (server tu upisuje mec u bazu)
+// called when the match ends (the server saves the match to the database here)
 export type MatchEndHandler = (match : Match) => void
 
-// jedna sesija igre izmedju dva igraca
+// one game session between two players
 export class Match {
     readonly id : string
-    readonly players : Record<Color, string>   // boja → id igraca
+    readonly players : Record<Color, string>   // color → player id
 
     private state : GameState = createInitialState()
-    private history : string[] = []             // potezi u notaciji
+    private history : string[] = []             // moves in notation
     private status : MatchStatus = 'waiting'
     private result : MatchResult | undefined
     private startedAt : Date | undefined
@@ -32,7 +32,7 @@ export class Match {
         this.onEnd = onEnd
     }
 
-    // pokrece mec od pocetka; posle zavrsenog meca radi kao reset
+    // starts the match from the beginning; after a finished match it acts as a reset
     start(){
         if (this.status == 'ongoing') {throw new Error('Match is already running')}
 
@@ -43,7 +43,7 @@ export class Match {
         this.status = 'ongoing'
     }
 
-    // prekid bez pobednika (npr. igrac napustio igru)
+    // abort without a winner (e.g. a player left the game)
     stop(){
         this.ensureOngoing()
         this.finish({ kind : 'aborted' })
@@ -55,7 +55,7 @@ export class Match {
         this.finish({ kind : 'win', winner : getOpponent(color), reason : 'resign' })
     }
 
-    // poraz jer se igrac nije vratio posle diskonekcije
+    // loss because the player didn't come back after a disconnect
     forfeit(playerId : string){
         this.ensureOngoing()
         const color = this.getPlayerColor(playerId)
@@ -66,7 +66,7 @@ export class Match {
         this.ensureOngoing()
         if (this.getCurrentPlayer() != playerId) {throw new Error('Not your turn')}
 
-        // applyMove baca gresku za nelegalan potez, pa notacija ide tek posle provere
+        // applyMove throws on an illegal move, so notation is added only after the check
         const next = applyMove(this.state, move)
         this.history.push(formatMove(this.state, move))
         this.state = next

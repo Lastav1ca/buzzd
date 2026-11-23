@@ -1,7 +1,7 @@
 import type { MatchManager } from "../match/matchManager.js"
 import { Room, type Visibility } from "./room.js"
 
-// sve sobe su samo u memoriji; restart servera ih brise
+// all rooms live only in memory; a server restart clears them
 export class RoomManager {
     private rooms : Map<string, Room> = new Map()
     private matches : MatchManager
@@ -20,7 +20,7 @@ export class RoomManager {
         return this.rooms.get(id)
     }
 
-    // javne sobe u koje jos moze da se udje kao igrac
+    // public rooms that can still be joined as a player
     listPublic() : Room[]{
         return Array.from(this.rooms.values()).filter(r => r.visibility == 'public' && r.hasFreeSeat())
     }

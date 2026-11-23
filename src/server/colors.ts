@@ -3,7 +3,7 @@ import type { ColorChoice } from "./protocol.js"
 
 type Choice = { playerId : string, choice : ColorChoice }
 
-// ista boja ili oba random → nasumicno; boja + random → ko je izabrao boju dobija je
+// same color or both random → random; color + random → whoever chose the color gets it
 export function assignColors(a : Choice, b : Choice, random = Math.random) : Record<Color, string>{
     let aColor : Color
 

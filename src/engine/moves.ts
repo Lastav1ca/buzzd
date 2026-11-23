@@ -19,7 +19,7 @@ import { hexToKey, hexEquals, getNeighbors, keyToHex } from "./grid/hex.js"
 export type Move =
     | { type : 'place', piece : PieceType, to : Hex }
     | { type : 'move', from : Hex, to : Hex }
-    | { type : 'pass' }   // samo kad igrac nema nijedan drugi legalan potez
+    | { type : 'pass' }   // only when the player has no other legal move
 
 const QUEEN_DEADLINE_TURN = 4
 
@@ -27,15 +27,15 @@ function getLegalPlacements(state : GameState, color : Color) : Hex[]{
     const legal : Set<string> = new Set()
     const oppColor = getOpponent(color)
 
-    if (state.board.size == 0){ //prva plocica (ide na 0,0)
+    if (state.board.size == 0){ // first tile (goes on 0,0)
         return [{ q: 0, r: 0 }];
     }
 
-    if (state.board.size == 1){ //druga plocica (mora neighbor od prve)
+    if (state.board.size == 1){ // second tile (must be a neighbor of the first)
         return getNeighbors({ q: 0, r: 0 })
     }
 
-    //sve ostale moraju da se dodiruju sa svojom figurom, polje mora biti prazno i ne sme da se dodiruju sa protivnickom
+    // all others must touch an own piece, the hex must be empty and must not touch an opponent's piece
     for(const position of state.board.keys()){
         const hex = keyToHex(position)
         const neighbors = getNeighbors(hex)
@@ -52,12 +52,12 @@ function getLegalPlacements(state : GameState, color : Color) : Hex[]{
     return Array.from(legal, keyToHex)
 }
 
-// gde sve gornja figura sa from moze da ode
+// everywhere the top piece at from can go
 function getMovementTargets(state : GameState, from : Hex) : Hex[]{
     const piece = getTopPiece(state, from)
     if (!piece) return []
 
-    // One Hive: kosnica ne sme da se raspadne kad se figura podigne
+    // One Hive: the hive must not split when the piece is lifted
     const without = removeTopPiece(state, from)
     if (!isHiveConnected(without)) return []
 
@@ -74,10 +74,10 @@ export function getLegalMoves(state : GameState) : Move[]{
 
     let placeable = new Set(state.hands[color].map(p => p.type))
     if (playerTurn == 1){
-        placeable.delete('queen')   // turnirsko pravilo: kraljica ne moze u prvom potezu
+        placeable.delete('queen')   // tournament rule: no queen on the first turn
     }
     if (playerTurn == QUEEN_DEADLINE_TURN && !queenPlaced){
-        placeable = new Set(['queen'])   // kraljica mora biti postavljena najkasnije u 4. potezu
+        placeable = new Set(['queen'])   // the queen must be placed by the 4th turn at the latest
     }
 
     if (placeable.size > 0){
@@ -89,7 +89,7 @@ export function getLegalMoves(state : GameState) : Move[]{
         }
     }
 
-    // figure smeju da se pomeraju tek kad je kraljica postavljena
+    // pieces may move only after the queen is placed
     if (queenPlaced){
         for (const [key, stack] of state.board){
             if (stack.at(-1)?.color != color) continue
@@ -114,7 +114,7 @@ function movesEqual(a : Move, b : Move) : boolean{
     return false
 }
 
-// vraca NOVO stanje, staro ostaje nepromenjeno
+// returns a NEW state, the old one stays unchanged
 export function applyMove(state : GameState, move : Move) : GameState{
     if (!getLegalMoves(state).some(m => movesEqual(m, move))){
         throw new Error('Illegal move')

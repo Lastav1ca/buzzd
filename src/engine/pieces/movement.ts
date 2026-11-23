@@ -1,9 +1,9 @@
 import { getCommonNeighbors, getNeighbors, type Hex } from "../grid/hex.js"
 import { isHexOccupied, type GameState } from "../state.js"
 
-// Klizanje sa from na susedno to. Od dva zajednicka suseda tacno jedan mora biti zauzet:
-// oba zauzeta = figura ne moze da se provuce (freedom to move),
-// nijedan zauzet = figura bi izgubila kontakt sa kosnicom.
+// Slide from `from` to the adjacent `to`. Exactly one of the two common neighbors must be occupied:
+// both occupied = the piece can't squeeze through (freedom to move),
+// neither occupied = the piece would lose contact with the hive.
 export function canSlide(state : GameState, from : Hex, to : Hex) : boolean{
     const [a, b] = getCommonNeighbors(from, to)
     if (!a || !b) {throw new Error('Hexes are not neighbors')}
@@ -11,7 +11,7 @@ export function canSlide(state : GameState, from : Hex, to : Hex) : boolean{
     return isHexOccupied(state, a) != isHexOccupied(state, b)
 }
 
-// sva prazna susedna polja na koja figura moze da klizne u jednom koraku
+// all empty adjacent hexes the piece can slide to in one step
 export function getSlides(state : GameState, from : Hex) : Hex[]{
     return getNeighbors(from).filter(to => !isHexOccupied(state, to) && canSlide(state, from, to))
 }

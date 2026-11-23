@@ -3,7 +3,7 @@ export type Hex = {
     r : number
 }
 
-// redom ukrug, pa su DIRECTIONS[i] i DIRECTIONS[i+1] susedni pravci
+// in circular order, so DIRECTIONS[i] and DIRECTIONS[i+1] are adjacent directions
 export const DIRECTIONS : Hex[] = [
     { q : 1, r : 0 },
     { q : 1, r : -1 },
@@ -25,7 +25,7 @@ export function getNeighbors(hex : Hex) : Hex[]{
     return DIRECTIONS.map(d => addHex(hex, d))
 }
 
-// dva polja koja su susedi i od a i od b (a i b moraju biti susedi)
+// the two hexes adjacent to both a and b (a and b must be neighbors)
 export function getCommonNeighbors(a : Hex, b : Hex) : Hex[]{
     const bKeys = new Set(getNeighbors(b).map(hexToKey))
     return getNeighbors(a).filter(n => bKeys.has(hexToKey(n)))

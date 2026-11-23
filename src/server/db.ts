@@ -26,7 +26,7 @@ export async function closeDb(){
     await pool.end()
 }
 
-// prekinuti mecevi (aborted) se ne upisuju
+// aborted matches are not saved
 export async function saveFinishedMatch(match : Match, userIds : Record<Color, string | null>){
     const result = match.getResult()
     if (!result || result.kind == 'aborted') return

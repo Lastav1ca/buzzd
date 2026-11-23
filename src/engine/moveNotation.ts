@@ -10,7 +10,7 @@ import {
     type GameState
 } from "./state.js"
 
-// notacija: https://entomology.gitlab.io/notation.html
+// notation: https://entomology.gitlab.io/notation.html
 
 const TYPE_LETTERS : Record<PieceType, string> = {
     queen : 'Q',
@@ -20,33 +20,33 @@ const TYPE_LETTERS : Record<PieceType, string> = {
     spider : 'S'
 }
 
-// gde je cilj u odnosu na referentnu figuru (dir = cilj - referenca)
-// znak ispred reference = cilj je levo od nje, znak iza = desno
+// where the target is relative to the reference piece (dir = target - reference)
+// sign before the reference = target is to its left, sign after = to its right
 const POSITIONS : { dir : Hex, format : (ref : string) => string }[] = [
-    { dir : { q : 1, r : 0 }, format : ref => `${ref}-` },     // desno
-    { dir : { q : 1, r : -1 }, format : ref => `${ref}/` },    // gore desno
-    { dir : { q : 0, r : -1 }, format : ref => `\\${ref}` },   // gore levo
-    { dir : { q : -1, r : 0 }, format : ref => `-${ref}` },    // levo
-    { dir : { q : -1, r : 1 }, format : ref => `/${ref}` },    // dole levo
-    { dir : { q : 0, r : 1 }, format : ref => `${ref}\\` }     // dole desno
+    { dir : { q : 1, r : 0 }, format : ref => `${ref}-` },     // right
+    { dir : { q : 1, r : -1 }, format : ref => `${ref}/` },    // upper right
+    { dir : { q : 0, r : -1 }, format : ref => `\\${ref}` },   // upper left
+    { dir : { q : -1, r : 0 }, format : ref => `-${ref}` },    // left
+    { dir : { q : -1, r : 1 }, format : ref => `/${ref}` },    // lower left
+    { dir : { q : 0, r : 1 }, format : ref => `${ref}\\` }     // lower right
 ]
 
-// wQ, wA1, bB2... broj samo za tipove kojih ima vise od jednog
+// wQ, wA1, bB2... number only for types with more than one piece
 export function formatPiece(piece : Piece) : string{
     const color = piece.color == 'white' ? 'w' : 'b'
     const number = PIECE_COUNTS[piece.type] > 1 ? piece.id : ''
     return `${color}${TYPE_LETTERS[piece.type]}${number}`
 }
 
-// state je stanje PRE poteza
+// state is the state BEFORE the move
 export function formatMove(state : GameState, move : Move) : string{
     if (move.type == 'pass') return 'pass'
 
     let piece : Piece | undefined
-    let board : GameState   // tabla bez figure koja se pomera, da ne bude sama sebi referenca
+    let board : GameState   // board without the moving piece, so it can't be its own reference
 
     if (move.type == 'place'){
-        // postavlja se figura tog tipa sa najmanjim brojem
+        // the piece of that type with the lowest number is placed
         piece = state.hands[getCurrentColor(state)].find(p => p.type == move.piece)
         board = state
     }else{
@@ -57,10 +57,10 @@ export function formatMove(state : GameState, move : Move) : string{
 
     const name = formatPiece(piece)
 
-    // prvi potez u igri nema referencu
+    // the first move of the game has no reference
     if (board.board.size == 0) return name
 
-    // buba na vrhu druge figure: referenca je ta figura, bez znaka
+    // beetle on top of another piece: the reference is that piece, without a sign
     const below = getTopPiece(board, move.to)
     if (below) return `${name} ${formatPiece(below)}`
 
@@ -73,7 +73,7 @@ export function formatMove(state : GameState, move : Move) : string{
     throw new Error('Destination has no neighbors')
 }
 
-// cela partija od pocetka: odigra poteze redom i vrati notaciju svakog
+// whole game from the start: plays the moves in order and returns each one's notation
 export function formatMoves(moves : Move[]) : string[]{
     let state = createInitialState()
     const result : string[] = []
