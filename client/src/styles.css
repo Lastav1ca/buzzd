@@ -16,11 +16,11 @@
     --piece-black: #2f2a24;
     --piece-black-edge: #120f0c;
 
-    --type-queen: #d99a12;
-    --type-ant: #2f6fb5;
-    --type-grasshopper: #3f8f4e;
-    --type-beetle: #8a4fb0;
-    --type-spider: #a0522d;
+    --type-queen: #f5a91e;
+    --type-ant: #289ee0;
+    --type-grasshopper: #42b23c;
+    --type-beetle: #9a7fc7;
+    --type-spider: #a4572a;
 
     color-scheme: light;
 }
@@ -90,8 +90,24 @@ h3 { font-size: 1rem; }
     color: var(--text);
     text-decoration: none;
     letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
 }
-.logo::before { content: "⬢ "; color: var(--accent); }
+/* the PNG is used only as a shape, the color is the queen color so the logo matches the pieces */
+.logo-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+    background-color: var(--type-queen);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+}
+
+.piece-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 .app-main { padding: 1rem; max-width: 1200px; margin: 0 auto; }
 
@@ -115,7 +131,11 @@ h3 { font-size: 1rem; }
 .segmented button.is-active { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
 
 /* lobby */
-.lobby { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+/* "New room" is narrow, "Join through link" takes the rest of the row, so a pasted link fits */
+.lobby { display: grid; gap: 1rem; grid-template-columns: minmax(260px, 1fr) 2fr; }
+@media (max-width: 700px) {
+    .lobby { grid-template-columns: 1fr; }
+}
 .lobby-rooms { grid-column: 1 / -1; }
 .lobby .primary { margin-top: 0.4rem; }
 .join-form { display: flex; gap: 0.5rem; }
@@ -147,7 +167,24 @@ h3 { font-size: 1rem; }
     justify-content: center;
     overflow: hidden;
 }
-.board { width: 100%; height: min(75vh, 720px); }
+.board-wrap { position: relative; width: 100%; }
+.board {
+    display: block;
+    width: 100%;
+    height: min(75vh, 720px);
+    cursor: grab;
+    touch-action: none;   /* dragging on touch screens pans the board instead of scrolling the page */
+    user-select: none;
+}
+.board.is-dragging { cursor: grabbing; }
+.board-controls {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+}
+.board-controls button { min-width: 2.2rem; padding: 0.3rem 0.6rem; background: var(--surface); }
 .board-placeholder { padding: 2rem; text-align: center; }
 
 @media (max-width: 860px) {
@@ -160,17 +197,13 @@ h3 { font-size: 1rem; }
 .piece-body { stroke-width: 2; }
 .piece-white .piece-body { fill: var(--piece-white); stroke: var(--piece-white-edge); }
 .piece-black .piece-body { fill: var(--piece-black); stroke: var(--piece-black-edge); }
-.piece-letter { text-anchor: middle; dominant-baseline: central; font-weight: 800; pointer-events: none; }
+.piece-icon { pointer-events: none; }
 .piece-stack { text-anchor: middle; dominant-baseline: central; font-weight: 700; fill: var(--muted); pointer-events: none; }
-.type-queen .piece-letter { fill: var(--type-queen); }
-.type-ant .piece-letter { fill: var(--type-ant); }
-.type-grasshopper .piece-letter { fill: var(--type-grasshopper); }
-.type-beetle .piece-letter { fill: var(--type-beetle); }
-.type-spider .piece-letter { fill: var(--type-spider); }
-.piece-black.type-ant .piece-letter { fill: #6fa8e8; }
-.piece-black.type-beetle .piece-letter { fill: #c08ae0; }
-.piece-black.type-spider .piece-letter { fill: #d98a5f; }
-.piece-black.type-grasshopper .piece-letter { fill: #6cc27c; }
+.type-queen .piece-icon { fill: var(--type-queen); }
+.type-ant .piece-icon { fill: var(--type-ant); }
+.type-grasshopper .piece-icon { fill: var(--type-grasshopper); }
+.type-beetle .piece-icon { fill: var(--type-beetle); }
+.type-spider .piece-icon { fill: var(--type-spider); }
 
 .piece.is-selectable { cursor: pointer; }
 .piece.is-selectable .piece-body { stroke: var(--accent); }

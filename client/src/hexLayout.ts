@@ -23,14 +23,6 @@ export function hexPoints(x : number, y : number, size = HEX_SIZE) : string{
 
 export const TYPE_ORDER : PieceType[] = ['queen', 'ant', 'grasshopper', 'beetle', 'spider']
 
-export const TYPE_LETTERS : Record<PieceType, string> = {
-    queen : 'Q',
-    ant : 'A',
-    grasshopper : 'G',
-    beetle : 'B',
-    spider : 'S'
-}
-
 export const TYPE_NAMES : Record<PieceType, string> = {
     queen : 'Queen',
     ant : 'Ant',
