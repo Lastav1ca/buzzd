@@ -131,7 +131,11 @@ h3 { font-size: 1rem; }
 .segmented button.is-active { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
 
 /* lobby */
-.lobby { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+/* "New room" is narrow, "Join through link" takes the rest of the row, so a pasted link fits */
+.lobby { display: grid; gap: 1rem; grid-template-columns: minmax(260px, 1fr) 2fr; }
+@media (max-width: 700px) {
+    .lobby { grid-template-columns: 1fr; }
+}
 .lobby-rooms { grid-column: 1 / -1; }
 .lobby .primary { margin-top: 0.4rem; }
 .join-form { display: flex; gap: 0.5rem; }
