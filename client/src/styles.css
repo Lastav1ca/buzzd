@@ -90,8 +90,22 @@ h3 { font-size: 1rem; }
     color: var(--text);
     text-decoration: none;
     letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
 }
-.logo::before { content: "⬢ "; color: var(--accent); }
+/* the PNG is used only as a shape, the color comes from --accent so it works in both themes */
+.logo-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+    background-color: var(--accent);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+}
 
 .app-main { padding: 1rem; max-width: 1200px; margin: 0 auto; }
 
