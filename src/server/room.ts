@@ -168,10 +168,19 @@ export class Room {
                 this.afterMatchAction()
                 break
             case 'leave':
-                this.removePlayer(slot, 'resign', this.match?.getHistory().length == 0)
-                socket.close(1000, 'Left the room')
+                this.leave(slot.playerId)
                 break
         }
+    }
+
+    // leaving over HTTP (e.g. the player moved to another room after their socket was already closed)
+    leave(playerId : string){
+        const slot = this.getSlot(playerId)
+        if (!slot) return
+
+        const socket = slot.socket
+        this.removePlayer(slot, 'resign', this.match?.getHistory().length == 0)
+        socket?.close(1000, 'Left the room')
     }
 
     private tryStartMatch(){

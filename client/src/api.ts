@@ -14,10 +14,14 @@ export type JoinResponse = {
     roomId : string
 }
 
-async function request<T>(method : string, path : string, body? : unknown) : Promise<T>{
+async function request<T>(method : string, path : string, body? : unknown, token? : string) : Promise<T>{
+    const headers : Record<string, string> = {}
+    if (body !== undefined) headers['Content-Type'] = 'application/json'
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
     const res = await fetch(path, {
         method,
-        headers : body === undefined ? {} : { 'Content-Type' : 'application/json' },
+        headers,
         body : body === undefined ? null : JSON.stringify(body)
     })
     const data = await res.json().catch(() => null)
@@ -40,10 +44,23 @@ export function joinRoom(roomId : string) : Promise<JoinResponse>{
     const pending = pendingJoins.get(roomId)
     if (pending) return pending
 
-    const promise = request<JoinResponse>('POST', `/rooms/${roomId}/join`)
+    // one room per tab: leave the previous room before taking a seat in a new one
+    const promise = leaveOtherRooms(roomId)
+        .then(() => request<JoinResponse>('POST', `/rooms/${roomId}/join`))
         .finally(() => pendingJoins.delete(roomId))
     pendingJoins.set(roomId, promise)
     return promise
+}
+
+export function leaveRoom(session : JoinResponse){
+    return request<void>('POST', `/rooms/${session.roomId}/leave`, undefined, session.token)
+}
+
+// errors are ignored: the old room may already be gone (404) or the token expired (401)
+async function leaveOtherRooms(keepRoomId : string){
+    const others = loadAllSessions().filter(s => s.roomId != keepRoomId)
+    await Promise.allSettled(others.map(leaveRoom))
+    for (const session of others) clearSession(session.roomId)
 }
 
 export function webSocketUrl(token : string) : string{
@@ -52,7 +69,8 @@ export function webSocketUrl(token : string) : string{
 }
 
 // the room token is kept in sessionStorage, so a page refresh puts the player back in the same seat
-const sessionKey = (roomId : string) => `buzzd:room:${roomId}`
+const SESSION_PREFIX = 'buzzd:room:'
+const sessionKey = (roomId : string) => `${SESSION_PREFIX}${roomId}`
 
 export function loadSession(roomId : string) : JoinResponse | undefined{
     try {
@@ -61,6 +79,21 @@ export function loadSession(roomId : string) : JoinResponse | undefined{
     } catch {
         return undefined
     }
+}
+
+function loadAllSessions() : JoinResponse[]{
+    const sessions : JoinResponse[] = []
+    try {
+        for (let i = 0; i < sessionStorage.length; i++){
+            const key = sessionStorage.key(i)
+            if (!key?.startsWith(SESSION_PREFIX)) continue
+            const session = loadSession(key.slice(SESSION_PREFIX.length))
+            if (session) sessions.push(session)
+        }
+    } catch {
+        // no sessionStorage: nothing saved, nothing to leave
+    }
+    return sessions
 }
 
 export function saveSession(session : JoinResponse){

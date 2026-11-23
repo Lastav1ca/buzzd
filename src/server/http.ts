@@ -1,6 +1,6 @@
 import express, { type ErrorRequestHandler, type Request } from "express"
 import type { RoomManager } from "./roomManager.js"
-import { signRoomToken, type Role } from "./tokens.js"
+import { signRoomToken, verifyRoomToken, type Role } from "./tokens.js"
 
 // login doesn't exist yet, so everyone is a guest for now
 function getUserIdFromLogin(_req : Request) : string | null{
@@ -46,6 +46,28 @@ export function createHttpApp(rooms : RoomManager){
 
         const token = signRoomToken({ playerId, userId, roomId : room.id, role })
         res.json({ token, role, playerId, roomId : room.id })
+    })
+
+    app.post('/rooms/:id/leave', (req, res) => {
+        const raw = req.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1]
+        const token = raw ? verifyRoomToken(raw.trim()) : undefined
+        if (!token){
+            res.status(401).json({ error : 'Missing or invalid room token' })
+            return
+        }
+        if (token.roomId != req.params.id){
+            res.status(403).json({ error : 'Token is for a different room' })
+            return
+        }
+
+        const room = rooms.get(req.params.id)
+        if (!room){
+            res.status(404).json({ error : 'Room not found' })
+            return
+        }
+
+        if (token.role == 'player') room.leave(token.playerId)
+        res.status(204).end()
     })
 
     const handleError : ErrorRequestHandler = (err, _req, res, _next) => {
