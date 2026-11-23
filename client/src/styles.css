@@ -161,7 +161,24 @@ h3 { font-size: 1rem; }
     justify-content: center;
     overflow: hidden;
 }
-.board { width: 100%; height: min(75vh, 720px); }
+.board-wrap { position: relative; width: 100%; }
+.board {
+    display: block;
+    width: 100%;
+    height: min(75vh, 720px);
+    cursor: grab;
+    touch-action: none;   /* dragging on touch screens pans the board instead of scrolling the page */
+    user-select: none;
+}
+.board.is-dragging { cursor: grabbing; }
+.board-controls {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+}
+.board-controls button { min-width: 2.2rem; padding: 0.3rem 0.6rem; background: var(--surface); }
 .board-placeholder { padding: 2rem; text-align: center; }
 
 @media (max-width: 860px) {
