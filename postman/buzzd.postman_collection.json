@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "buzzd",
-    "description": "HTTP endpointi buzzd servera i uputstvo za WebSocket.\n\n## WebSocket\n\nPostman ne čuva WebSocket zahteve u JSON fajlu kolekcije, pa se prave ručno (jednom):\n\n1. **New → WebSocket**, URL: `{{wsUrl}}/ws?token={{token1}}` (igrač 1). Sačuvaj ga u ovu kolekciju.\n2. Isto za `{{token2}}` (igrač 2) i `{{token3}}` (posmatrač).\n3. U svakom WebSocket zahtevu, pod **Saved messages**, sačuvaj poruke ispod.\n\nRedosled: pokreni **Create room**, pa **Join** zahteve (oni upisuju tokene u varijable kolekcije), pa se u roku od 30 s poveži preko WebSocket-a.\n\n### Poruke\n\n```json\n{ \"type\": \"choose_color\", \"color\": \"white\" }\n{ \"type\": \"choose_color\", \"color\": \"black\" }\n{ \"type\": \"choose_color\", \"color\": \"random\" }\n{ \"type\": \"ready\" }\n{ \"type\": \"unready\" }\n{ \"type\": \"move\", \"move\": { \"type\": \"place\", \"piece\": \"ant\", \"to\": { \"q\": 0, \"r\": 0 } } }\n{ \"type\": \"move\", \"move\": { \"type\": \"move\", \"from\": { \"q\": 0, \"r\": 0 }, \"to\": { \"q\": 1, \"r\": 0 } } }\n{ \"type\": \"move\", \"move\": { \"type\": \"pass\" } }\n{ \"type\": \"resign\" }\n{ \"type\": \"leave\" }\n```\n\nLegalne poteze za trenutno stanje server šalje u polju `legalMoves` (u `match_started`, `match_state` i `move_played`), pa se jedan od njih može prekopirati u `move` poruku.\n\n### Negativni slučajevi\n\n- token koji ne postoji → konekcija se zatvara kodom `4001`\n- povezivanje posle isteka roka od 30 s → `4003`\n- `move` kad nisi na redu → `{ \"type\": \"error\", \"message\": \"Not your turn\" }`\n- nelegalan potez → `Illegal move`\n- `choose_color` tokom meča → `Match is in progress`\n- bilo koja poruka od posmatrača → `Spectators can only watch`\n",
+    "description": "HTTP endpoints of the buzzd server and a WebSocket guide.\n\n## WebSocket\n\nPostman doesn't save WebSocket requests in the collection JSON file, so they are created manually (once):\n\n1. **New → WebSocket**, URL: `{{wsUrl}}/ws?token={{token1}}` (player 1). Save it to this collection.\n2. Same for `{{token2}}` (player 2) and `{{token3}}` (spectator).\n3. In each WebSocket request, under **Saved messages**, save the messages below.\n\nOrder: run **Create room**, then the **Join** requests (they write tokens into the collection variables), then connect over WebSocket within 30 s.\n\n### Messages\n\n```json\n{ \"type\": \"choose_color\", \"color\": \"white\" }\n{ \"type\": \"choose_color\", \"color\": \"black\" }\n{ \"type\": \"choose_color\", \"color\": \"random\" }\n{ \"type\": \"ready\" }\n{ \"type\": \"unready\" }\n{ \"type\": \"move\", \"move\": { \"type\": \"place\", \"piece\": \"ant\", \"to\": { \"q\": 0, \"r\": 0 } } }\n{ \"type\": \"move\", \"move\": { \"type\": \"move\", \"from\": { \"q\": 0, \"r\": 0 }, \"to\": { \"q\": 1, \"r\": 0 } } }\n{ \"type\": \"move\", \"move\": { \"type\": \"pass\" } }\n{ \"type\": \"resign\" }\n{ \"type\": \"leave\" }\n```\n\nThe legal moves for the current state are sent by the server in the `legalMoves` field (in `match_started`, `match_state` and `move_played`), so one of them can be copied into a `move` message.\n\n### Negative cases\n\n- a token that doesn't exist → the connection is closed with code `4001`\n- connecting after the 30 s window expires → `4003`\n- `move` when it's not your turn → `{ \"type\": \"error\", \"message\": \"Not your turn\" }`\n- an illegal move → `Illegal move`\n- `choose_color` during a match → `Match is in progress`\n- any message from a spectator → `Spectators can only watch`\n",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -81,7 +81,7 @@
                 "rooms"
               ]
             },
-            "description": "Pravi sobu i upisuje njen id u varijablu `roomId`.",
+            "description": "Creates a room and writes its id into the `roomId` variable.",
             "body": {
               "mode": "raw",
               "raw": "{\n    \"visibility\": \"public\"\n}",
@@ -100,7 +100,7 @@
                 "exec": [
                   "pm.test(\"201\", () => pm.response.to.have.status(201));",
                   "const body = pm.response.json();",
-                  "pm.test(\"ima roomId\", () => pm.expect(body.roomId).to.be.a(\"string\"));",
+                  "pm.test(\"has roomId\", () => pm.expect(body.roomId).to.be.a(\"string\"));",
                   "pm.collectionVariables.set(\"roomId\", body.roomId);"
                 ]
               }
@@ -143,7 +143,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"201\", () => pm.response.to.have.status(201));",
-                  "pm.test(\"privatna\", () => pm.expect(pm.response.json().visibility).to.eql(\"private\"));"
+                  "pm.test(\"private\", () => pm.expect(pm.response.json().visibility).to.eql(\"private\"));"
                 ]
               }
             }
@@ -171,7 +171,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"niz\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                  "pm.test(\"array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
                 ]
               }
             }
@@ -193,7 +193,7 @@
                 "join"
               ]
             },
-            "description": "Upisuje token u `token1`. Poveži se preko WebSocket-a u roku od 30 s."
+            "description": "Writes the token into `token1`. Connect over WebSocket within 30 s."
           },
           "event": [
             {
@@ -203,7 +203,7 @@
                 "exec": [
                   "pm.test(\"200\", () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
-                  "pm.test(\"uloga player\", () => pm.expect(body.role).to.eql(\"player\"));",
+                  "pm.test(\"role player\", () => pm.expect(body.role).to.eql(\"player\"));",
                   "pm.collectionVariables.set(\"token1\", body.token);"
                 ]
               }
@@ -226,7 +226,7 @@
                 "join"
               ]
             },
-            "description": "Upisuje token u `token2`."
+            "description": "Writes the token into `token2`."
           },
           "event": [
             {
@@ -236,7 +236,7 @@
                 "exec": [
                   "pm.test(\"200\", () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
-                  "pm.test(\"uloga player\", () => pm.expect(body.role).to.eql(\"player\"));",
+                  "pm.test(\"role player\", () => pm.expect(body.role).to.eql(\"player\"));",
                   "pm.collectionVariables.set(\"token2\", body.token);"
                 ]
               }
@@ -259,7 +259,7 @@
                 "join"
               ]
             },
-            "description": "Treći ulazak u punu sobu daje ulogu posmatrača. Upisuje token u `token3`."
+            "description": "A third join into a full room gets the spectator role. Writes the token into `token3`."
           },
           "event": [
             {
@@ -269,7 +269,7 @@
                 "exec": [
                   "pm.test(\"200\", () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
-                  "pm.test(\"uloga spectator\", () => pm.expect(body.role).to.eql(\"spectator\"));",
+                  "pm.test(\"role spectator\", () => pm.expect(body.role).to.eql(\"spectator\"));",
                   "pm.collectionVariables.set(\"token3\", body.token);"
                 ]
               }
@@ -317,7 +317,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"400\", () => pm.response.to.have.status(400));",
-                  "pm.test(\"ima error\", () => pm.expect(pm.response.json().error).to.be.a(\"string\"));"
+                  "pm.test(\"has error\", () => pm.expect(pm.response.json().error).to.be.a(\"string\"));"
                 ]
               }
             }
@@ -370,13 +370,13 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/rooms/nepostoji/join",
+              "raw": "{{baseUrl}}/rooms/does-not-exist/join",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "rooms",
-                "nepostoji",
+                "does-not-exist",
                 "join"
               ]
             }
@@ -388,7 +388,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"404\", () => pm.response.to.have.status(404));",
-                  "pm.test(\"poruka\", () => pm.expect(pm.response.json().error).to.eql(\"Room not found\"));"
+                  "pm.test(\"message\", () => pm.expect(pm.response.json().error).to.eql(\"Room not found\"));"
                 ]
               }
             }
