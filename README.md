@@ -2,17 +2,17 @@
 
 Online Hive.
 
-## Pokretanje
+## Getting started
 
 ```
-docker compose up -d          # baza
-cp .env.example .env          # samo prvi put
+docker compose up -d          # database
+cp .env.example .env          # first time only
 npm install && npm --prefix client install
-npm run dev                   # server na :3000
-npm run client                # frontend na :5173
+npm run dev                   # server on :3000
+npm run client                # frontend on :5173
 ```
 
-Frontend otvori na http://localhost:5173. Vite prosleđuje `/rooms` i `/ws` serveru na portu 3000.
+Open the frontend at http://localhost:5173. Vite proxies `/rooms` and `/ws` to the server on port 3000.
 
 ## Credits
 
