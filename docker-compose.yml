@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-buzzd}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-buzzd}
       POSTGRES_DB: ${POSTGRES_DB:-buzzd}
-    # 5432 zauzima lokalni Postgres, 5433 baza iz drugog projekta
+    # 5432 is taken by the local Postgres, 5433 by a database from another project
     ports:
       - "${POSTGRES_PORT:-5434}:5432"
     volumes:
